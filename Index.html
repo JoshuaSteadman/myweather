@@ -1,0 +1,148 @@
+
+<html><head><base href="https://weathernow.ai" />
+<title>WeatherNow.ai - Interactive Global Weather</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
+    color: #333;
+  }
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+    color: #1a5f7a;
+  }
+  .location-container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .location {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 10px 0;
+    width: calc(50% - 10px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  .location h2 {
+    margin-top: 0;
+    color: #2c3e50;
+  }
+  .current-weather {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .temperature {
+    font-size: 3em;
+    font-weight: bold;
+  }
+  .weather-icon {
+    font-size: 3em;
+  }
+  .forecast {
+    display: flex;
+    justify-content: space-between;
+  }
+  .forecast-day {
+    text-align: center;
+  }
+  .forecast-icon {
+    font-size: 2em;
+    margin: 10px 0;
+  }
+  @media (max-width: 600px) {
+    .location {
+      width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>WeatherNow.ai</h1>
+  <div class="location-container">
+    <div class="location">
+      <h2>Connecticut, USA (06382)</h2>
+      <div class="current-weather">
+        <div class="temperature">72°F</div>
+        <div class="weather-icon">⛅</div>
+      </div>
+      <div class="forecast">
+        <div class="forecast-day">
+          <div>Thu</div>
+          <div class="forecast-icon">🌤️</div>
+          <div>75°F</div>
+        </div>
+        <div class="forecast-day">
+          <div>Fri</div>
+          <div class="forecast-icon">🌦️</div>
+          <div>70°F</div>
+        </div>
+        <div class="forecast-day">
+          <div>Sat</div>
+          <div class="forecast-icon">☀️</div>
+          <div>78°F</div>
+        </div>
+      </div>
+    </div>
+    <div class="location">
+      <h2>Nan, Thailand</h2>
+      <div class="current-weather">
+        <div class="temperature">86°F</div>
+        <div class="weather-icon">🌤️</div>
+      </div>
+      <div class="forecast">
+        <div class="forecast-day">
+          <div>Thu</div>
+          <div class="forecast-icon">🌦️</div>
+          <div>84°F</div>
+        </div>
+        <div class="forecast-day">
+          <div>Fri</div>
+          <div class="forecast-icon">⛈️</div>
+          <div>82°F</div>
+        </div>
+        <div class="forecast-day">
+          <div>Sat</div>
+          <div class="forecast-icon">🌤️</div>
+          <div>85°F</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  function updateTime() {
+    const now = new Date();
+    const ctTime = now.toLocaleTimeString('en-US', { timeZone: 'America/New_York' });
+    const thTime = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Bangkok' });
+    
+    document.querySelector('.location:nth-child(1) h2').innerHTML = `Connecticut, USA (06382)<br>${ctTime}`;
+    document.querySelector('.location:nth-child(2) h2').innerHTML = `Nan, Thailand<br>${thTime}`;
+  }
+
+  setInterval(updateTime, 1000);
+  updateTime();
+
+  const locations = document.querySelectorAll('.location');
+  locations.forEach(location => {
+    location.addEventListener('click', function() {
+      this.style.transform = 'scale(1.05)';
+      setTimeout(() => this.style.transform = 'scale(1)', 200);
+    });
+  });
+});
+</script>
+</body></html>
