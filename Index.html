@@ -1,6 +1,4 @@
-<!DOCTYPE html><html><head>
-<title>Kaleidoscope Drag and Drop mp3 Playlist Player On the Go</title>
-<style>
+<!DOCTYPE html><head><title>Kaleidoscope Playlist - Drag and Drop mp3 Infinite Visual Music Journey</title><style>
 body, html {
   margin: 0;
   padding: 0;
@@ -60,19 +58,6 @@ button:hover, select:hover {
 input[type="range"] {
   width: 100%;
 }
-#drop-zone {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  font-size: 24px;
-  z-index: 2000;
-}
 #playlist {
   position: fixed;
   top: 20px;
@@ -97,8 +82,21 @@ input[type="range"] {
 #playlist li:hover {
   text-decoration: underline;
 }
-</style>
-</head>
+#drop-zone {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  z-index: 2000;
+  pointer-events: none;
+}
+</style></head>
 <body>
 <canvas id="visualizer"></canvas>
 
@@ -138,11 +136,11 @@ input[type="range"] {
 </div>
 
 <div id="playlist">
-  <h3>Playlist</h3>
+  <h3>Infinite Playlist</h3>
   <ul id="playlist-items"></ul>
 </div>
 
-<div id="drop-zone">Drop audio files here to add to playlist</div>
+<div id="drop-zone">Drop audio files anywhere to add to playlist</div>
 
 <script>
 const canvas = document.getElementById('visualizer');
@@ -472,6 +470,17 @@ function uploadFile(file) {
     option.textContent = file.name;
     stationSelect.appendChild(option);
     updatePlaylistUI();
+    
+    // Play the first dropped file if no music is currently playing
+    if (audioElement.paused && stationSelect.options.length === 1) {
+      stationSelect.selectedIndex = 0;
+      audioElement.src = option.value;
+      audioElement.play();
+      playPauseBtn.textContent = 'Pause';
+      if (!analyser) {
+        setupAudioNodes();
+      }
+    }
   } else {
     alert('Please drop only audio files.');
   }
@@ -485,7 +494,11 @@ function updatePlaylistUI() {
     li.addEventListener('click', () => {
       stationSelect.selectedIndex = index;
       audioElement.src = option.value;
-      if (!audioElement.paused) {
+      
+      // Simulate a click on the play/pause button
+      if (audioElement.paused) {
+        playPauseBtn.click();
+      } else {
         audioElement.play();
       }
     });
@@ -497,10 +510,6 @@ function updatePlaylistUI() {
 shufflePlaylist();
 audioElement.src = stationSelect.value;
 requestAnimationFrame(draw);
-
-// Auto shuffle playlist and change station
-setInterval(shufflePlaylist, 300000); // Shuffle every 5 minutes
-setInterval(autoChangeStation, 180000); // Change station every 3 minutes
 
 // Control visibility
 const controls = document.getElementById('controls');
@@ -526,5 +535,21 @@ document.addEventListener('mousemove', showControls);
 hideControls(); // Hide controls initially
 
 updatePlaylistUI();
+
+// Ensure continuous playback
+audioElement.addEventListener('ended', () => {
+  autoChangeStation();
+});
+
+// Start playing automatically when first song is added
+stationSelect.addEventListener('change', () => {
+  if (audioElement.paused && stationSelect.options.length > 0) {
+    audioElement.play();
+    playPauseBtn.textContent = 'Pause';
+    if (!analyser) {
+      setupAudioNodes();
+    }
+  }
+});
 </script>
 </body></html>
