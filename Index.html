@@ -186,7 +186,6 @@ function smoothTransition() {
 function fluctuateControls() {
   targetSettings.iterations = 200 + Math.sin(Date.now() * 0.001) * 100;
   targetSettings.zoom = 1 + Math.sin(Date.now() * 0.0005) * 0.5;
-  targetSettings.speed = 1 + Math.sin(Date.now() * 0.0003) * 0.5;
   targetSettings.audioReactivity = 1 + Math.sin(Date.now() * 0.0007) * 0.5;
   targetSettings.kaleidoscopeSegments = 6 + Math.sin(Date.now() * 0.0002) * 3;
   
