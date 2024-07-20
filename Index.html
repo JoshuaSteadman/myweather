@@ -1,5 +1,5 @@
-<!DOCTYPE html><html><head><base href="https://radioclaude.com/fractal-audio-visualizer">
-<title>RadioClaude.com Fractal Audio Visualizer</title>
+<!DOCTYPE html><html><head>
+<title>Kaleidoscope Drag and Drop mp3 Playlist Player On the Go</title>
 <style>
 body, html {
   margin: 0;
@@ -60,6 +60,43 @@ button:hover, select:hover {
 input[type="range"] {
   width: 100%;
 }
+#drop-zone {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  z-index: 2000;
+}
+#playlist {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: rgba(0,0,0,0.7);
+  padding: 15px;
+  border-radius: 10px;
+  z-index: 1000;
+  max-height: 300px;
+  overflow-y: auto;
+  transition: opacity 0.5s ease;
+}
+#playlist ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+#playlist li {
+  cursor: pointer;
+  padding: 5px 0;
+}
+#playlist li:hover {
+  text-decoration: underline;
+}
 </style>
 </head>
 <body>
@@ -69,10 +106,10 @@ input[type="range"] {
   <button id="playPause">Play</button>
   <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5">
   <select id="station">
-    <option value="https://streaming.radio.co/s774887f7b/listen">Quantum Jazz Fluctuations</option>
-    <option value="https://ice5.somafm.com/sonicuniverse-128-mp3">Interstellar Groove Nebula</option>
-    <option value="https://ice4.somafm.com/gsclassic-128-mp3">Temporal Jazz Anomalies</option>
-    <option value="https://ice2.somafm.com/deepspaceone-128-mp3">Hyperdimensional Bebop</option>
+    <option value="https://s3-us-west-2.amazonaws.com/s.cdpn.io/308622/Leo%20-%20Trying.mp3">Leo - Trying</option>
+    <option value="https://s3-us-west-2.amazonaws.com/s.cdpn.io/308622/Post%20Malone%20-%20rockstar%20ft.%2021%20Savage%20(1).mp3">Post Malone - rockstar</option>
+    <option value="https://s3-us-west-2.amazonaws.com/s.cdpn.io/308622/NF%20-%20Let%20You%20Down.mp3">NF - Let You Down</option>
+    <option value="https://s3-us-west-2.amazonaws.com/s.cdpn.io/308622/Marshmello%20-%20Silence%20ft.%20Khalid.mp3">Marshmello Khalid - Silence</option>
   </select>
 </div>
 
@@ -99,6 +136,13 @@ input[type="range"] {
     <input type="range" id="kaleidoscopeSegments" min="2" max="12" value="6" step="1">
   </div>
 </div>
+
+<div id="playlist">
+  <h3>Playlist</h3>
+  <ul id="playlist-items"></ul>
+</div>
+
+<div id="drop-zone">Drop audio files here to add to playlist</div>
 
 <script>
 const canvas = document.getElementById('visualizer');
@@ -139,7 +183,6 @@ function smoothTransition() {
   }
 }
 
-// Automatic control fluctuation
 function fluctuateControls() {
   targetSettings.iterations = 200 + Math.sin(Date.now() * 0.001) * 100;
   targetSettings.zoom = 1 + Math.sin(Date.now() * 0.0005) * 0.5;
@@ -319,6 +362,7 @@ audioElement.crossOrigin = "anonymous";
 const playPauseBtn = document.getElementById('playPause');
 const volumeSlider = document.getElementById('volume');
 const stationSelect = document.getElementById('station');
+const playlistItems = document.getElementById('playlist-items');
 
 function setupAudioNodes() {
   audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -359,6 +403,7 @@ function shufflePlaylist() {
     [options[i], options[j]] = [options[j], options[i]];
   }
   options.forEach(option => stationSelect.appendChild(option));
+  updatePlaylistUI();
 }
 
 function autoChangeStation() {
@@ -370,6 +415,7 @@ function autoChangeStation() {
   if (!audioElement.paused) {
     audioElement.play();
   }
+  updatePlaylistUI();
 }
 
 stationSelect.addEventListener('change', (e) => {
@@ -377,7 +423,76 @@ stationSelect.addEventListener('change', (e) => {
   if (!audioElement.paused) {
     audioElement.play();
   }
+  updatePlaylistUI();
 });
+
+// Drag and drop functionality
+const dropZone = document.getElementById('drop-zone');
+
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+  document.body.addEventListener(eventName, preventDefaults, false);
+});
+
+function preventDefaults(e) {
+  e.preventDefault();
+  e.stopPropagation();
+}
+
+['dragenter', 'dragover'].forEach(eventName => {
+  document.body.addEventListener(eventName, highlight, false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+  document.body.addEventListener(eventName, unhighlight, false);
+});
+
+function highlight() {
+  dropZone.style.display = 'flex';
+}
+
+function unhighlight() {
+  dropZone.style.display = 'none';
+}
+
+document.body.addEventListener('drop', handleDrop, false);
+
+function handleDrop(e) {
+  const dt = e.dataTransfer;
+  const files = dt.files;
+  handleFiles(files);
+}
+
+function handleFiles(files) {
+  ([...files]).forEach(uploadFile);
+}
+
+function uploadFile(file) {
+  if (file.type.startsWith('audio/')) {
+    const option = document.createElement('option');
+    option.value = URL.createObjectURL(file);
+    option.textContent = file.name;
+    stationSelect.appendChild(option);
+    updatePlaylistUI();
+  } else {
+    alert('Please drop only audio files.');
+  }
+}
+
+function updatePlaylistUI() {
+  playlistItems.innerHTML = '';
+  Array.from(stationSelect.options).forEach((option, index) => {
+    const li = document.createElement('li');
+    li.textContent = option.textContent;
+    li.addEventListener('click', () => {
+      stationSelect.selectedIndex = index;
+      audioElement.src = option.value;
+      if (!audioElement.paused) {
+        audioElement.play();
+      }
+    });
+    playlistItems.appendChild(li);
+  });
+}
 
 // Initial setup
 shufflePlaylist();
@@ -391,11 +506,13 @@ setInterval(autoChangeStation, 180000); // Change station every 3 minutes
 // Control visibility
 const controls = document.getElementById('controls');
 const menu = document.getElementById('menu');
+const playlist = document.getElementById('playlist');
 let timeout;
 
 function showControls() {
   controls.style.opacity = '1';
   menu.style.opacity = '1';
+  playlist.style.opacity = '1';
   clearTimeout(timeout);
   timeout = setTimeout(hideControls, 3000);
 }
@@ -403,9 +520,12 @@ function showControls() {
 function hideControls() {
   controls.style.opacity = '0';
   menu.style.opacity = '0';
+  playlist.style.opacity = '0';
 }
 
 document.addEventListener('mousemove', showControls);
 hideControls(); // Hide controls initially
+
+updatePlaylistUI();
 </script>
 </body></html>
