@@ -403,17 +403,37 @@ function shufflePlaylist() {
   updatePlaylistUI();
 }
 
+// Function to move to the next song in the playlist
 function autoChangeStation() {
   const options = stationSelect.options;
   let currentIndex = stationSelect.selectedIndex;
   currentIndex = (currentIndex + 1) % options.length;
   stationSelect.selectedIndex = currentIndex;
   audioElement.src = options[currentIndex].value;
-  if (!audioElement.paused) {
+  // Simulate a click on the play/pause button if it's currently showing "Play"
+  if (playPauseBtn.textContent === 'Play') {
+    playPauseBtn.click();
+  } else {
     audioElement.play();
   }
   updatePlaylistUI();
 }
+
+// Ensure continuous playback
+audioElement.addEventListener('ended', () => {
+  autoChangeStation();
+});
+
+// Update the stationSelect event listener
+stationSelect.addEventListener('change', (e) => {
+  audioElement.src = e.target.value;
+  if (playPauseBtn.textContent === 'Play') {
+    playPauseBtn.click();
+  } else {
+    audioElement.play();
+  }
+  updatePlaylistUI();
+});
 
 stationSelect.addEventListener('change', (e) => {
   audioElement.src = e.target.value;
