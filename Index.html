@@ -1,278 +1,209 @@
-<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ArchiveAmp: WebAmp Player for Archive.org</title><style>
-    body {
-        font-family: 'Courier New', monospace;
-        margin: 0;
-        padding: 0;
-        background: #000000;
-        color: #00ff00;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-    }
-    .container {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px;
-        flex-grow: 1;
-    }
-    h1 {
-        text-align: center;
-        color: #00ff00;
-        text-shadow: 0 0 10px #00ff00;
-    }
-    #searchContainer {
-        position: relative;
-    }
-    #searchInput {
-        width: 100%;
-        padding: 10px;
-        font-size: 16px;
-        background: #111111;
-        color: #00ff00;
-        border: 1px solid #00ff00;
-        border-radius: 4px;
-    }
-    #searchButton {
-        position: absolute;
-        right: 0;
-        top: 0;
-        padding: 10px;
-        background: #00ff00;
-        color: #000000;
-        border: none;
-        border-radius: 0 4px 4px 0;
-        cursor: pointer;
-    }
-    #resultsOverlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.9);
-        display: none;
-        overflow-y: auto;
-    }
-    #resultsContent {
-        max-width: 800px;
-        margin: 20px auto;
-        padding: 20px;
-        background: #111111;
-        border-radius: 8px;
-        border: 1px solid #00ff00;
-        box-shadow: 0 0 10px #00ff00;
-    }
-    .item {
-        background: #1a1a1a;
-        margin-bottom: 15px;
-        padding: 15px;
-        border-radius: 4px;
-        border: 1px solid #00ff00;
-    }
-    .item h3 {
-        color: #00ff00;
-        margin-top: 0;
-    }
-    .item button, .item a {
-        background: #00ff00;
-        color: #000000;
-        border: none;
-        padding: 8px 12px;
-        margin-right: 10px;
-        border-radius: 4px;
-        text-decoration: none;
-        display: inline-block;
-        cursor: pointer;
-    }
-    #minimizeResults, #restoreResults {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: #00ff00;
-        color: #000000;
-        border: none;
-        padding: 10px 15px;
-        border-radius: 50%;
-        cursor: pointer;
-        z-index: 1000;
-    }
-    #restoreResults {
-        display: none;
-    }
-    #webampContainer {
-        position: fixed;
-        bottom: 0;
-        right: 0;
-        width: 300px;
-        height: 200px;
-    }
-    @media (max-width: 600px) {
-        .container {
-            padding: 10px;
-        }
-        #webampContainer {
-            width: 100%;
-        }
-    }
-</style></head><body>
-<div class="container">
-    <div id="searchContainer">
-        <input type="text" id="searchInput" placeholder="Search for MP3s on archive.org">
-        <button id="searchButton">Search</button>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steadman Webamp with Responsive Search</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/webamp@1.5.0/built/webamp.bundle.min.js"></script>
+    <script src="https://unpkg.com/butterchurn@2.6.7/lib/butterchurn.min.js"></script>
+    <script src="https://unpkg.com/butterchurn-presets@2.4.7/lib/butterchurnPresets.min.js"></script>
+</head>
+<body class="bg-black text-white">
+    <div id="app" class="h-screen"></div>
+    
+    <div id="search-container" class="fixed top-4 left-4 z-50 w-full max-w-md">
+        <div class="relative">
+            <input type="text" id="searchInput" placeholder="Search Archive.org" class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-full focus:outline-none focus:border-blue-500">
+            <button id="searchButton" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-500 text-white px-4 py-1 rounded-full hover:bg-blue-600 focus:outline-none">
+                Search
+            </button>
+        </div>
+        
+        <div id="resultsOverlay" class="hidden mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg max-h-96 overflow-y-auto">
+            <div id="resultsContent" class="p-4"></div>
+        </div>
+        
+        <button id="toggleResults" class="hidden mt-2 w-full bg-gray-800 text-white px-4 py-2 rounded-full hover:bg-gray-700 focus:outline-none">
+            ▼
+        </button>
     </div>
-</div>
 
-<div id="resultsOverlay">
-    <div id="resultsContent"></div>
-</div>
-
-<button id="minimizeResults">-</button>
-<button id="restoreResults">+</button>
-
-<div id="webampContainer"></div>
-
-<script src="https://unpkg.com/webamp@1.4.2/built/webamp.bundle.min.js"></script>
-<script>
-    const searchInput = document.getElementById('searchInput');
-    const searchButton = document.getElementById('searchButton');
-    const resultsOverlay = document.getElementById('resultsOverlay');
-    const resultsContent = document.getElementById('resultsContent');
-    const minimizeResults = document.getElementById('minimizeResults');
-    const restoreResults = document.getElementById('restoreResults');
-
-    let webamp;
-
-    window.onload = function() {
-        webamp = new Webamp({});
-        webamp.renderWhenReady(document.getElementById('webampContainer'));
-    };
-
-    searchButton.addEventListener('click', performSearch);
-    searchInput.addEventListener('keypress', function(event) {
-        if (event.key === 'Enter') {
-            performSearch();
-        }
-    });
-
-    minimizeResults.addEventListener('click', () => {
-        resultsOverlay.style.display = 'none';
-        restoreResults.style.display = 'block';
-    });
-
-    restoreResults.addEventListener('click', () => {
-        resultsOverlay.style.display = 'block';
-        restoreResults.style.display = 'none';
-    });
-
-    function performSearch() {
-        const query = searchInput.value;
-        const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(query)}+AND+mediatype%3Aaudio&fl[]=identifier,title,description&sort[]=&sort[]=&sort[]=&rows=50&page=1&output=json`;
-
-        resultsContent.innerHTML = 'Searching...';
-        resultsOverlay.style.display = 'block';
-
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                displayResults(data.response.docs);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                resultsContent.innerHTML = 'An error occurred while searching.';
-            });
-    }
-
-    function displayResults(items) {
-        if (items.length === 0) {
-            resultsContent.innerHTML = 'No results found.';
-            return;
-        }
-
-        resultsContent.innerHTML = '';
-        items.forEach(item => {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'item';
-            itemDiv.innerHTML = `
-                <h3>${item.title || 'No title'}</h3>
-                <p>${item.description || 'No description'}</p>
-                <a href="https://archive.org/details/${item.identifier}" target="_blank">View on Archive.org</a>
-                <button onclick="fetchMp3LinksAndPlay('${item.identifier}')">Play in Webamp</button>
-                <button onclick="fetchMp3Links('${item.identifier}')">Show MP3 Links</button>
-                <div class="mp3-links" id="mp3Links-${item.identifier}"></div>
-            `;
-            resultsContent.appendChild(itemDiv);
-        });
-    }
-
-    function fetchMp3Links(identifier) {
-        const mp3LinksDiv = document.getElementById(`mp3Links-${identifier}`);
-        mp3LinksDiv.innerHTML = 'Loading MP3 links...';
-
-        const apiUrl = `https://archive.org/metadata/${identifier}/files`;
-
-        fetch(apiUrl)
-            .then(response => response.json())
-            .then(data => {
-                const mp3Files = data.result.filter(file => file.name.endsWith('.mp3'));
-                
-                if (mp3Files.length === 0) {
-                    mp3LinksDiv.innerHTML = 'No MP3 files found for this item.';
-                    return;
-                }
-
-                mp3LinksDiv.innerHTML = '<h4>MP3 Links:</h4>';
-                mp3Files.forEach(file => {
-                    const link = `https://archive.org/download/${identifier}/${encodeURIComponent(file.name)}`;
-                    const addButton = document.createElement('button');
-                    addButton.textContent = `Add to playlist: ${file.name}`;
-                    addButton.onclick = () => addToWebampPlaylist(link, file.name);
-                    mp3LinksDiv.appendChild(addButton);
-                    mp3LinksDiv.appendChild(document.createElement('br'));
-                });
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                mp3LinksDiv.innerHTML = 'An error occurred while fetching MP3 links.';
-            });
-    }
-
-    function addToWebampPlaylist(url, title) {
-        const track = {
-            url: url,
-            metaData: {
-                title: title,
-                artist: 'Unknown',
+    <script>
+        const Webamp = window.Webamp;
+        const webamp = new Webamp({
+            initialTracks: [{
+                metaData: {
+                    artist: "DJ Mike Llama",
+                    title: "Llama Whippin' Intro",
+                },
+                url: "https://cdn.jsdelivr.net/gh/captbaritone/webamp@43434d82cfe0e37286dbbe0666072dc3190a83bc/mp3/llama-2.91.mp3",
+                duration: 5.322286,
+            }],
+            __butterchurnOptions: {
+                importButterchurn: () => Promise.resolve(window.butterchurn),
+                getPresets: () => {
+                    const presets = window.butterchurnPresets.getPresets();
+                    return Object.keys(presets).map((name) => ({
+                        name,
+                        butterchurnPresetObject: presets[name],
+                    }));
+                },
+                butterchurnOpen: true,
             },
-        };
-        webamp.appendTracks([track]);
-    }
+            __initialWindowLayout: {
+                main: { position: { x: 0, y: 0 } },
+                equalizer: { position: { x: 0, y: 116 } },
+                playlist: { position: { x: 0, y: 232 }, size: [0, 4] },
+                milkdrop: { position: { x: 275, y: 0 }, size: [7, 12] },
+            },
+            __initialStateOverrides: {
+                milkdrop: { desktop: true, },
+            },
+        });
 
-    function fetchMp3LinksAndPlay(identifier) {
-        const apiUrl = `https://archive.org/metadata/${identifier}/files`;
+        webamp.renderWhenReady(document.getElementById("app")).then(() => {
+            webamp.store.dispatch({ type: "SET_MILKDROP_DESKTOP", enabled: true });
+            webamp.store.dispatch({ type: "SET_VOLUME", volume: 50 });
+            webamp.store.dispatch({ type: "PLAY" });
+            webamp.store.dispatch({ type: "TOGGLE_MILKDROP_WINDOW" });
+        });
 
-        fetch(apiUrl)
-            .then(response => response.json())
-            .then(data => {
-                const mp3Files = data.result.filter(file => file.name.endsWith('.mp3'));
-                
-                if (mp3Files.length === 0) {
-                    console.error('No MP3 files found for this item.');
-                    return;
-                }
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const resultsOverlay = document.getElementById('resultsOverlay');
+        const resultsContent = document.getElementById('resultsContent');
+        const toggleResults = document.getElementById('toggleResults');
+        let resultsVisible = false;
 
-                const tracks = mp3Files.map(file => ({
-                    url: `https://archive.org/download/${identifier}/${encodeURIComponent(file.name)}`,
-                    metaData: {
-                        title: file.name,
-                        artist: 'Unknown',
-                    },
-                }));
+        searchButton.addEventListener('click', performSearch);
+        searchInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                performSearch();
+            }
+        });
 
-                webamp.setTracksToPlay(tracks);
-            })
-            .catch(error => {
-                console.error('Error:', error);
+        toggleResults.addEventListener('click', function() {
+            resultsVisible = !resultsVisible;
+            resultsOverlay.style.display = resultsVisible ? 'block' : 'none';
+            toggleResults.textContent = resultsVisible ? '▲' : '▼';
+        });
+
+        function performSearch() {
+            const query = searchInput.value;
+            const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(query)}+AND+mediatype%3Aaudio&fl[]=identifier,title,description&sort[]=&sort[]=&sort[]=&rows=50&page=1&output=json`;
+
+            resultsContent.innerHTML = '<p class="text-center">Searching...</p>';
+            resultsOverlay.style.display = 'block';
+            toggleResults.style.display = 'block';
+            resultsVisible = true;
+            toggleResults.textContent = '▲';
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    displayResults(data.response.docs);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    resultsContent.innerHTML = '<p class="text-red-500">An error occurred while searching.</p>';
+                });
+        }
+
+        function displayResults(items) {
+            if (items.length === 0) {
+                resultsContent.innerHTML = '<p class="text-center">No results found.</p>';
+                return;
+            }
+
+            resultsContent.innerHTML = '';
+            items.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'mb-4 p-4 bg-gray-800 rounded';
+                itemDiv.innerHTML = `
+                    <h3 class="text-lg font-bold">${item.title || 'No title'}</h3>
+                    <p class="text-sm text-gray-400">${item.description?.substring(0, 100) || 'No description'}...</p>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                        <a href="https://archive.org/details/${item.identifier}" target="_blank" class="text-blue-400 hover:underline text-sm">View on Archive.org</a>
+                        <button onclick="fetchMp3LinksAndPlay('${item.identifier}')" class="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600">Play in Webamp</button>
+                        <button onclick="fetchMp3Links('${item.identifier}')" class="bg-gray-700 text-white px-2 py-1 rounded text-sm hover:bg-gray-600">Show MP3 Links</button>
+                    </div>
+                    <div class="mp3-links mt-2" id="mp3Links-${item.identifier}"></div>
+                `;
+                resultsContent.appendChild(itemDiv);
             });
-    }
-</script>
-</body></html>
+        }
+
+        function fetchMp3Links(identifier) {
+            const mp3LinksDiv = document.getElementById(`mp3Links-${identifier}`);
+            mp3LinksDiv.innerHTML = '<p class="text-center">Loading MP3 links...</p>';
+
+            const apiUrl = `https://archive.org/metadata/${identifier}/files`;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const mp3Files = data.result.filter(file => file.name.endsWith('.mp3'));
+                    
+                    if (mp3Files.length === 0) {
+                        mp3LinksDiv.innerHTML = '<p class="text-center text-red-500">No MP3 files found for this item.</p>';
+                        return;
+                    }
+
+                    mp3LinksDiv.innerHTML = '<h4 class="font-bold mt-2 mb-1">MP3 Links:</h4>';
+                    mp3Files.forEach(file => {
+                        const link = `https://archive.org/download/${identifier}/${encodeURIComponent(file.name)}`;
+                        const addButton = document.createElement('button');
+                        addButton.className = 'bg-green-500 text-white px-2 py-1 rounded text-sm hover:bg-green-600 mr-2 mb-1';
+                        addButton.textContent = `Add to playlist: ${file.name.substring(0, 20)}...`;
+                        addButton.onclick = () => addToWebampPlaylist(link, file.name);
+                        mp3LinksDiv.appendChild(addButton);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mp3LinksDiv.innerHTML = '<p class="text-center text-red-500">An error occurred while fetching MP3 links.</p>';
+                });
+        }
+
+        function addToWebampPlaylist(url, title) {
+            const track = {
+                url: url,
+                metaData: {
+                    title: title,
+                    artist: 'Unknown',
+                },
+            };
+            webamp.appendTracks([track]);
+        }
+
+        function fetchMp3LinksAndPlay(identifier) {
+            const apiUrl = `https://archive.org/metadata/${identifier}/files`;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const mp3Files = data.result.filter(file => file.name.endsWith('.mp3'));
+                    
+                    if (mp3Files.length === 0) {
+                        console.error('No MP3 files found for this item.');
+                        return;
+                    }
+
+                    const tracks = mp3Files.map(file => ({
+                        url: `https://archive.org/download/${identifier}/${encodeURIComponent(file.name)}`,
+                        metaData: {
+                            title: file.name,
+                            artist: 'Unknown',
+                        },
+                    }));
+
+                    webamp.setTracksToPlay(tracks);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+</body>
+</html>
