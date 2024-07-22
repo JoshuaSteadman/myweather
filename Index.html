@@ -1,43 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
+<!DOCTYPE html><html lang="en"><head><base href="https://DarkUi.SteadmanWebamp.com/"></head><body <!doctype="" html="" class="bg-black text-white">&gt;
+
+
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Steadman Webamp with Responsive Search</title>
+    <title>Webamp with Responsive Search</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/webamp@1.5.0/built/webamp.bundle.min.js"></script>
     <script src="https://unpkg.com/butterchurn@2.6.7/lib/butterchurn.min.js"></script>
     <script src="https://unpkg.com/butterchurn-presets@2.4.7/lib/butterchurnPresets.min.js"></script>
-</head>
-<body class="bg-black text-white">
+
+
     <div id="app" class="h-screen"></div>
     
-    <div id="search-container" class="fixed top-4 left-4 z-50 w-full max-w-md">
-        <div class="relative">
-            <input type="text" id="searchInput" placeholder="Search Archive.org" class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-full focus:outline-none focus:border-blue-500">
-            <button id="searchButton" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-500 text-white px-4 py-1 rounded-full hover:bg-blue-600 focus:outline-none">
-                Search
-            </button>
-        </div>
-        
-        <div id="resultsOverlay" class="hidden mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg max-h-96 overflow-y-auto">
-            <div id="resultsContent" class="p-4"></div>
-        </div>
-        
-        <button id="toggleResults" class="hidden mt-2 w-full bg-gray-800 text-white px-4 py-2 rounded-full hover:bg-gray-700 focus:outline-none">
-            ▼
+    <div>
+    <div class="relative">
+        <input type="text" id="searchInput" placeholder="Search Archive.org" class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-full focus:outline-none focus:border-blue-500 transition-opacity duration-500">
+        <button id="searchButton" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-500 text-white px-4 py-1 rounded-full hover:bg-blue-600 focus:outline-none transition-opacity duration-500">
+            Search
         </button>
     </div>
+    
+    <div id="resultsOverlay" class="hidden mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg max-h-96 overflow-y-auto transition-opacity duration-500">
+        <div id="resultsContent" class="p-4"></div>
+    </div>
+    
+    <button id="toggleResults" class="hidden mt-2 w-full bg-gray-800 text-white px-4 py-2 rounded-full hover:bg-gray-700 focus:outline-none transition-opacity duration-500">
+        ▼
+    </button>
+</div>
 
     <script>
         const Webamp = window.Webamp;
         const webamp = new Webamp({
             initialTracks: [{
                 metaData: {
-                    artist: "DJ Mike Llama",
-                    title: "Llama Whippin' Intro",
+                    artist: "Alien Ant Farm",
+                    title: "Smooth Criminal",
                 },
-                url: "https://cdn.jsdelivr.net/gh/captbaritone/webamp@43434d82cfe0e37286dbbe0666072dc3190a83bc/mp3/llama-2.91.mp3",
+                url: "https://ia904701.us.archive.org/27/items/alien-ant-farm-smooth-criminal/Alien%20Ant%20Farm%20-%20Smooth%20Criminal.mp3",
                 duration: 5.322286,
             }],
             __butterchurnOptions: {
@@ -205,5 +205,5 @@
                 });
         }
     </script>
-</body>
-</html>
+
+</body></html>
